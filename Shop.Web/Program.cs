@@ -1,24 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-
+﻿
 namespace Shop.Web
 {
+    using Data;
+    using Microsoft.AspNetCore;
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.Extensions.DependencyInjection;
+
     public class Program
     {
         public static void Main(string[] args)
         {
-            CreateWebHostBuilder(args).Build().Run();
+            //Aqui antes the hacer el host Building Run() (cuando arranca), ejecuta el RunSeeding que
+            // es quine llama el alimentador de la Base de Datos
+            var host = CreateWebHostBuilder(args).Build();
+            RunSeeding(host);
+            host.Run();
+        }
+
+        private static void RunSeeding(IWebHost host)
+        {
+            var scopeFactory = host.Services.GetService<IServiceScopeFactory>();
+            using (var scope = scopeFactory.CreateScope())
+            {
+                //Al llamar la base de datos aquí, se llama a la clase SeedDb, quien es quine alimenta
+                var seeder = scope.ServiceProvider.GetService<SeedDb>();
+                seeder.SeedAsync().Wait();
+            }
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>();
     }
+
 }

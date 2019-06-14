@@ -23,6 +23,8 @@ namespace Shop.Web
 
         public IConfiguration Configuration { get; }
 
+        // Se hace la inyección del DataContex o DB para que use la configuración de base de datos 
+        // configurada en el archico appsettings.json
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
@@ -30,6 +32,9 @@ namespace Shop.Web
             {
                 cfg.UseSqlServer(this.Configuration.GetConnectionString("DefaultConnection"));
             });
+
+            // Hace la inyección del SeedDd para que reconozca la clase.
+            services.AddTransient<SeedDb>();
 
             services.Configure<CookiePolicyOptions>(options =>
             {
