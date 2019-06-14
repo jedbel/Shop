@@ -5,8 +5,9 @@ namespace Shop.Web.Data
     using System.Threading.Tasks;
     using Entities;
 
-    // Se creó a partir de la clase Repository, para que cuando inyectemos lo hagamos con una configuración específica de la
-    //Interfáz, lo que me vaa permitir pruebas Unitarias.
+    /* Se creó a partir de la clase Repository, para que cuando inyectemos lo hagamos con una configuración específica de la
+    Interfáz, lo que me vaa permitir pruebas Unitarias. No quiero que el controlador de Products inyecte directamente la DB o
+    DbCOntext, sino que inyecte el repositorio*/
     public interface IRepository
     {
         void AddProduct(Product product);
