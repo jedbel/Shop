@@ -24,7 +24,7 @@ namespace Shop.Web
         public IConfiguration Configuration { get; }
 
         // Se hace la inyección del DataContex o DB para que use la configuración de base de datos 
-        // configurada en el archico appsettings.json
+        // configurada en el archico appsettings.json. Cualquier clase que en constructor llame un DbContext lo toma de acá.
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
