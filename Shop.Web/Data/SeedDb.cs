@@ -6,6 +6,7 @@ namespace Shop.Web.Data
     using System.Threading.Tasks;
     using Entities;
 
+    // Esta clase solo corre si no hay productos (si se eliminan los que hay actualmente por ejemplo)
     public class SeedDb
     {
         private readonly DataContext context;

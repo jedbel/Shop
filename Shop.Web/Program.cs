@@ -11,7 +11,7 @@ namespace Shop.Web
         public static void Main(string[] args)
         {
             //Aqui antes the hacer el host Building Run() (cuando arranca), ejecuta el RunSeeding que
-            // es quine llama el alimentador de la Base de Datos
+            // es quien llama el alimentador de la Base de Datos
             var host = CreateWebHostBuilder(args).Build();
             RunSeeding(host);
             host.Run();
@@ -22,7 +22,7 @@ namespace Shop.Web
             var scopeFactory = host.Services.GetService<IServiceScopeFactory>();
             using (var scope = scopeFactory.CreateScope())
             {
-                //Al llamar la base de datos aquí, se llama a la clase SeedDb, quien es quine alimenta
+                //Al llamar la base de datos aquí, se llama a la clase SeedDb, quien es quien alimenta
                 var seeder = scope.ServiceProvider.GetService<SeedDb>();
                 seeder.SeedAsync().Wait();
             }
