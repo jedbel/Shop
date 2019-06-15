@@ -36,6 +36,10 @@ namespace Shop.Web
             // Hace la inyección del SeedDd para que reconozca la clase.
             services.AddTransient<SeedDb>();
 
+            /*Cada que llamen un IRepository me va a inyectar la implementación de la clase Repository 
+            AddTransient => se usa y se destruye, AddScoped se reusa las veces que se considere neces*/
+            services.AddScoped<IRepository, Repository>();
+
             services.Configure<CookiePolicyOptions>(options =>
             {
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.

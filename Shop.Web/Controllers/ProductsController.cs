@@ -12,29 +12,34 @@ namespace Shop.Web.Controllers
 {
     public class ProductsController : Controller
     {
-        private readonly DataContext _context;
+        private readonly IRepository repository;
 
-        public ProductsController(DataContext context)
+        //eliminamos el DataContext e inyectamos la Interfaz Repositorio
+        public ProductsController(IRepository repository)
         {
-            _context = context;
+            this.repository = repository;
         }
 
+        /*Index(acción por defecto del controlador) pinta la lista de productos, le estaba pasando aquí la lista 
+        de productos obtenida de la DB ahora le va a pasar los prodictos del repositorio. Ya no es Asincrono*/
         // GET: Products
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            return View(await _context.Products.ToListAsync());
+            /* la Vista pinta esos productos. (El controlador maneja la lógica, la vista lo que el usuario ve)
+             y los modelos son los objetos que estamos trasportando entre V y C) */
+            return View(this.repository.GetProducts());
         }
 
         // GET: Products/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // Las acciones Index y details solo tienen GET ya que son solo de consulta (lectura)
+        public IActionResult Details(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var product = await _context.Products
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var product = this.repository.GetProduct(id.Value);
             if (product == null)
             {
                 return NotFound();
@@ -44,49 +49,57 @@ namespace Shop.Web.Controllers
         }
 
         // GET: Products/Create
+        // Cuendo le digo NEW el me pinta un formularion en blanco
         public IActionResult Create()
         {
             return View();
         }
 
         // POST: Products/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        //Cuando le digo SAVE se ejecuta el botón Submit del formulario, el cual ejectula la acción POST
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Price,ImageUrl,LastPurchase,LastSale,IsAvailabe,Stock")] Product product)
+        public async Task<IActionResult> Create(Product product)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(product);
-                await _context.SaveChangesAsync();
+                /*Si el modelo es valido, entonces accedemos al producto por repository, adicionamos el 
+                 producto que queremos guardar en BD AddProduct, lo guardo con SaveAllAsync() y si lo logra
+                 grabar, pinta el producto =>RedirectToAction*/
+                this.repository.AddProduct(product);
+                await this.repository.SaveAllAsync();
                 return RedirectToAction(nameof(Index));
             }
+            /*Si el modelo no es valido (no pasa las dataanotations), vuelve a llamar la acción create y le pasa
+             lo que lleva. Cuando se envia el post con el product se está enviando un producto nullo, el usuario
+             llena todos o parcialmente los campos de product, cuando vuelve al POST regresa con los campos que
+             el usuario haya ingresado (ya no es null).*/
             return View(product);
         }
 
         // GET: Products/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public IActionResult Edit(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var product = await _context.Products.FindAsync(id);
+            // busqueme el profucto por el Value del id del producto
+            var product = this.repository.GetProduct(id.Value);
             if (product == null)
             {
                 return NotFound();
             }
+            //pinta el formulario con los datos con los datos previos para que sean modificados
             return View(product);
         }
 
         // POST: Products/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // realizamos los cambios que el usuario realiza en el edit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Price,ImageUrl,LastPurchase,LastSale,IsAvailabe,Stock")] Product product)
+        public async Task<IActionResult> Edit(int id, Product product)
         {
             if (id != product.Id)
             {
@@ -97,12 +110,12 @@ namespace Shop.Web.Controllers
             {
                 try
                 {
-                    _context.Update(product);
-                    await _context.SaveChangesAsync();
+                    this.repository.UpdateProduct(product);
+                    await this.repository.SaveAllAsync();// aquí es bueno validar si guardó o nó
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ProductExists(product.Id))
+                    if (!this.repository.ProductExists(product.Id))
                     {
                         return NotFound();
                     }
@@ -117,37 +130,33 @@ namespace Shop.Web.Controllers
         }
 
         // GET: Products/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        // si no esxiste el producto retotna notfound, si existe lo busca
+        public IActionResult Delete(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var product = await _context.Products
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var product = this.repository.GetProduct(id.Value);
             if (product == null)
             {
                 return NotFound();
             }
-
+            //si lo encuentra se va para la vista Delete
             return View(product);
         }
 
         // POST: Products/Delete/5
+        // cuando hagan el submit se ejecuta la acción delete, el POST delete
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product = await _context.Products.FindAsync(id);
-            _context.Products.Remove(product);
-            await _context.SaveChangesAsync();
+            var product = this.repository.GetProduct(id);
+            this.repository.RemoveProduct(product);
+            await this.repository.SaveAllAsync();
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool ProductExists(int id)
-        {
-            return _context.Products.Any(e => e.Id == id);
         }
     }
 }
