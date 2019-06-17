@@ -29,6 +29,13 @@ namespace Shop.Web.Data.Entities
 
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = false)]
         public double Stock { get; set; }
+
+        /* Se adiciona el objeto User aquí, en el lado Varios de la relación => 1 Usuario tiene Varios Productos
+        Luego hacemos drop de base de datos y realizamos la nueva migración, la cual me creará las tablas
+        que en conjunto me manejan la seguridad del sistema. Luego modificamos el SeedDb adicionandole otra
+        inyección en SeedDb.cs*/
+        public User User { get; set; }
+
     }
 
 }

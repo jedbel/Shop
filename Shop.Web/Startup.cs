@@ -6,11 +6,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shop.Web.Data;
+using Shop.Web.Data.Entities;
 
 namespace Shop.Web
 {
@@ -32,6 +34,22 @@ namespace Shop.Web
             {
                 cfg.UseSqlServer(this.Configuration.GetConnectionString("DefaultConnection"));
             });
+
+            /*Aqui vamos a usar un Identity, personalisando los usuarion con mis usuarios (mi definicion) y 
+             definimos nuestras configuraciones de rol de usuario. Luego adiconalos "app.UseAuthentication"
+             (para definir que tiene autenticacion)*/
+            services.AddIdentity<User, IdentityRole>(cfg =>
+            {
+                cfg.User.RequireUniqueEmail = true;
+                cfg.Password.RequireDigit = false;
+                cfg.Password.RequiredUniqueChars = 0;
+                cfg.Password.RequireLowercase = false;
+                cfg.Password.RequireNonAlphanumeric = false;
+                cfg.Password.RequireUppercase = false;
+                cfg.Password.RequiredLength = 7;
+            })
+            .AddEntityFrameworkStores<DataContext>();
+
 
             // Hace la inyección del SeedDd para que reconozca la clase.
             services.AddTransient<SeedDb>();
@@ -67,6 +85,8 @@ namespace Shop.Web
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+            //se adicionó ya que cree usuario para autenticación
+            app.UseAuthentication();
             app.UseCookiePolicy();
 
             app.UseMvc(routes =>
