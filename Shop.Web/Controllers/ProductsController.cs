@@ -1,23 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Shop.Web.Data;
-using Shop.Web.Data.Entities;
-
+﻿
 namespace Shop.Web.Controllers
 {
+    using System.Threading.Tasks;
+    using Data;
+    using Data.Entities;
+    using Helpers;
+    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.EntityFrameworkCore;
+
     public class ProductsController : Controller
     {
-        private readonly IRepository repository;
+        /*Como eliminamos el IRepositoty clase, debemos cusar los demás repositorios. Además dar revisada a los métodos
+         ya que algunos cambian, otros se vuelven asyncronos, entre otros*/
+        //private readonly IRepository repository;
+
+        private readonly IProductRepository productRepository;
+        public IUserHelper userHelper;
 
         //eliminamos el DataContext e inyectamos la Interfaz Repositorio
-        public ProductsController(IRepository repository)
+        /*Como adicionamos el IUserHelper, lo vamos a inyectar en nuestro products controller e inizalizo prop userHelper*/
+        public ProductsController(IProductRepository productRepository , IUserHelper userHelper) //antes era IRepository
         {
-            this.repository = repository;
+            this.productRepository = productRepository;
+            this.userHelper = userHelper;
         }
 
         /*Index(acción por defecto del controlador) pinta la lista de productos, le estaba pasando aquí la lista 
@@ -27,19 +32,24 @@ namespace Shop.Web.Controllers
         {
             /* la Vista pinta esos productos. (El controlador maneja la lógica, la vista lo que el usuario ve)
              y los modelos son los objetos que estamos trasportando entre V y C) */
-            return View(this.repository.GetProducts());
+           // Cambió el método 
+           //return View(this.repository.GetProducts());
+            return View(this.productRepository.GetAll());
         }
 
         // GET: Products/Details/5
         // Las acciones Index y details solo tienen GET ya que son solo de consulta (lectura)
-        public IActionResult Details(int? id)
+        // Cambió el método y repository por productRepository
+        //public IActionResult Details(int? id)
+        public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var product = this.repository.GetProduct(id.Value);
+            //var product = this.repository.GetProduct(id.Value);
+            var product = await this.productRepository.GetByIdAsync(id.Value);
             if (product == null)
             {
                 return NotFound();
@@ -66,8 +76,15 @@ namespace Shop.Web.Controllers
                 /*Si el modelo es valido, entonces accedemos al producto por repository, adicionamos el 
                  producto que queremos guardar en BD AddProduct, lo guardo con SaveAllAsync() y si lo logra
                  grabar, pinta el producto =>RedirectToAction*/
-                this.repository.AddProduct(product);
-                await this.repository.SaveAllAsync();
+
+                /*Después de iyectar "userHelper" adicionamos la captura del usruario que ha creado el producto en "product.User"
+                 Ir a Edit también y hacer el mismo cambio para que el usuaro no quede nulo.*/
+                //TODO: To change for the logged user
+                product.User = await this.userHelper.GetUserByEmailAsync("jedgara@gmail.com");
+                //cambio aquí
+                //this.repository.AddProduct(product);
+                //await this.repository.SaveAllAsync
+                await this.productRepository.CreateAsync(product);
                 return RedirectToAction(nameof(Index));
             }
             /*Si el modelo no es valido (no pasa las dataanotations), vuelve a llamar la acción create y le pasa
@@ -78,15 +95,18 @@ namespace Shop.Web.Controllers
         }
 
         // GET: Products/Edit/5
-        public IActionResult Edit(int? id)
+        //public IActionResult Edit(int? id)
+        // Cambió aquí el metodo
+        public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            // busqueme el profucto por el Value del id del producto
-            var product = this.repository.GetProduct(id.Value);
+            // busqueme el producto por el Value del id del producto
+            //var product = this.repository.GetProduct(id.Value);
+            var product = await this.productRepository.GetByIdAsync(id.Value);
             if (product == null)
             {
                 return NotFound();
@@ -110,13 +130,19 @@ namespace Shop.Web.Controllers
             {
                 try
                 {
-                    this.repository.UpdateProduct(product);
-                    await this.repository.SaveAllAsync();// aquí es bueno validar si guardó o nó
+                    //TODO: To change for the logged user
+                    product.User = await this.userHelper.GetUserByEmailAsync("jedgara@gmail.com");
+                    //Cambió acá
+                    //this.repository.UpdateProduct(product);
+                    //await this.repository.SaveAllAsync();// aquí es bueno validar si guardó o nó
+                    await this.productRepository.UpdateAsync(product);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!this.repository.ProductExists(product.Id))
-                    {
+                    //Cambió acá
+                    //if (!this.repository.ProductExists(product.Id))
+                    if (!await this.productRepository.ExistAsync(product.Id))
+                        {
                         return NotFound();
                     }
                     else
@@ -131,14 +157,16 @@ namespace Shop.Web.Controllers
 
         // GET: Products/Delete/5
         // si no esxiste el producto retotna notfound, si existe lo busca
-        public IActionResult Delete(int? id)
+        //cambió también después de implementar Ipro/countryRepository
+       //public IActionResult Delete(int? id)
+        public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
-
-            var product = this.repository.GetProduct(id.Value);
+            //var product = this.repository.GetProduct(id.Value);
+            var product = await this.productRepository.GetByIdAsync(id.Value);
             if (product == null)
             {
                 return NotFound();
@@ -153,9 +181,12 @@ namespace Shop.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product = this.repository.GetProduct(id);
-            this.repository.RemoveProduct(product);
-            await this.repository.SaveAllAsync();
+            // cambiaron
+            //var product = this.repository.GetProduct(id);
+            //this.repository.RemoveProduct(product);
+            //await this.repository.SaveAllAsync();
+            var product = await this.productRepository.GetByIdAsync(id);
+            await this.productRepository.DeleteAsync(product);
             return RedirectToAction(nameof(Index));
         }
     }

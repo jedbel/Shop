@@ -16,6 +16,10 @@ namespace Shop.Web.Data
     {
         public DbSet<Product> Products { get; set; }
 
+        /*Como adicionamos las clases RepositoryCountry y IRepCountry, debemos adicionar la el modelo para que me
+         cree la tablade ountries.*/
+        public DbSet<Country> Countries { get; set; }
+
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         {
 

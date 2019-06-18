@@ -5,13 +5,14 @@ namespace Shop.Web.Data
     using System.Linq;
     using System.Threading.Tasks;
     using Entities;
+    using Helpers;
     using Microsoft.AspNetCore.Identity;
 
     // Esta clase solo corre si no hay productos (si se eliminan los que hay actualmente por ejemplo)
     public class SeedDb
     {
         private readonly DataContext context;
-        private readonly UserManager<User> userManager;
+        private readonly IUserHelper userHelper;
         private Random random;
 
         /* JB Injects the data context defined on StarUp class.
@@ -20,10 +21,13 @@ namespace Shop.Web.Data
         /*Luego de hacer la migració, inyectamos otra clase llamada UserManager que se manipula con mi clase User
         No se configura en el StarUp ya que ya viene embebida por defaul en el .Net Core. Hay que inicializar el 
         campo userManajer con "Ctrl+." A continuación creo usuario (antes de productos) */
-        public SeedDb(DataContext context, UserManager<User> userManager)
+        //public SeedDb(DataContext context, UserManager<User> userManager)
+
+        /*Cambiamos la UserManager inyection, por la nueva UserHelper inyection. Ctrl+. dos veces (create and initialize fiel) */
+        public SeedDb(DataContext context, IUserHelper userHelper)
         {
             this.context = context;
-            this.userManager = userManager;
+            this.userHelper = userHelper;
             this.random = new Random();
         }
 
@@ -33,8 +37,11 @@ namespace Shop.Web.Data
         {
             await this.context.Database.EnsureCreatedAsync();
 
-            // antes de crear el usuario, verifico que no exista con FindByEmailAsync
-            var user = await this.userManager.FindByEmailAsync("jedgara@gmail.com");
+            //Add User. Antes de crear el usuario, verifico que no exista con FindByEmailAsync
+            //var user = await this.userManager.FindByEmailAsync("jedgara@gmail.com");
+
+            // Cambio la manera de llamar le método para crear usuario
+            var user = await this.userHelper.GetUserByEmailAsync("jedgara@gmail.com");
             if (user == null)
             {
                 user = new User
@@ -42,12 +49,15 @@ namespace Shop.Web.Data
                     FirstName = "Jedbel",
                     LastName = "Garcia",
                     Email = "jedgara@gmail.com",
-                    UserName = "jedgara",
+                    UserName = "jedgara@gmail.com",
                     PhoneNumber = "3182149085"
                 };
 
                 // me crea el usuario con el password deseado, si el IdentityResult es difer a Success inta un error
-                var result = await this.userManager.CreateAsync(user, "1234567");
+                //var result = await this.userManager.CreateAsync(user, "1234567");
+
+                // IGualmente cambiamos nombre de métodos aquí. Luego vamos a ProductsController a conf.
+                var result = await this.userHelper.AddUserAsync(user, "1234567");
                 if (result != IdentityResult.Success)
                 {
                     throw new InvalidOperationException("Could not create the user in seeder");
@@ -66,8 +76,8 @@ namespace Shop.Web.Data
             }
         }
 
-        //Como adicioné un Usuario, a la clase AddProduct le agrego un usuario (User user). Finalmente vamos al
-        //StartUp configuramos las restricciones para mi password
+        /*Como adicioné un Usuario, a la clase AddProduct le agrego un usuario (User user). Finalmente vamos al
+        StartUp configuramos las restricciones para mi password*/
         private void AddProduct(string name, User user)
         {
             // Here we are the products defined above on Method SeddAsync (iPhone, Mouse...)

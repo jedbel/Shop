@@ -1,21 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Shop.Web.Data;
-using Shop.Web.Data.Entities;
+﻿
 
 namespace Shop.Web
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.HttpsPolicy;
+    using Microsoft.AspNetCore.Identity;
+    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Data;
+    using Data.Entities;
+    using Helpers;
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -56,7 +59,17 @@ namespace Shop.Web
 
             /*Cada que llamen un IRepository me va a inyectar la implementación de la clase Repository 
             AddTransient => se usa y se destruye, AddScoped se reusa las veces que se considere neces*/
-            services.AddScoped<IRepository, Repository>();
+
+            /*Ahora cambiamos nuestra inyecciòn, ya que emininamos el Repository (metodos de produst) por el repositorio genèrico
+            tanto para product, cuntries, y para cualquier otra inyecciòn que deseemos adicionar. De aquí ir a ProductsController
+            ya que estaba usando el IRepository que acabamos de eliminar*/
+            //services.AddScoped<IRepository, Repository>();
+            services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<ICountryRepository, CountryRepository>();
+
+            /*Cada que llamen un IUserHelper me va a inyectar la implementación de la clase UserHelper. Después
+             de esto vaos a remover la inyeccción del UserManager y cambiarla por la inyección del UserHelper (new generic inyection)*/
+            services.AddScoped<IUserHelper, UserHelper>();
 
             services.Configure<CookiePolicyOptions>(options =>
             {
