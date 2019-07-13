@@ -47,8 +47,16 @@
             <td>
                 @Html.DisplayFor(modelItem => item.Price)
             </td>
+            <!--15 si la imagen no es nula, pinte un image (img) y el src = origen de la imagen. Al src le ponemos
+                UrlContent y si el ImageUrl empieza por ~ (como es el caso) el sabe como pintarla de forma correcta.
+                Ahora, las otras prodiedades hacen que la imagen se ganatice de 100 pix de ancho y no me las deforma
+                las ajusta, asi sea mas grande o alto.-->
             <td>
-                @Html.DisplayFor(modelItem => item.ImageUrl)
+                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                {
+                    <img src="@Url.Content(item.ImageUrl)" alt="Image" style="width:100px;height:150px;max-width: 100%; height: auto;" />
+                }
+    
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.LastPurchase)
@@ -63,8 +71,8 @@
                 @Html.DisplayFor(modelItem => item.Stock)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning">Edit</a> 
-                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info">Details</a> 
+                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning">Edit</a>
+                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info">Details</a>
                 <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger">Delete</a>
             </td>
         </tr>

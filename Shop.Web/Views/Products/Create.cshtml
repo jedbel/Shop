@@ -1,4 +1,4 @@
-﻿@model Shop.Web.Data.Entities.Product
+﻿@model Shop.Web.Models.ProductViewModel
 
 @{
     ViewData["Title"] = "Create";
@@ -11,7 +11,9 @@
 <div class="row">
     <div class="col-md-4">
         <!--Ya acá me crea un formulario Create, basado enla acción de create-->
-        <form asp-action="Create">
+        <!--110719 Después de crear el modelo ProductViewModel, adicionamos enctype="multipart/form-data
+            para que ese objeto InFormFile no se nos pierda.Ahora cambiamos ImageUrl por ImageFIle-->
+        <form asp-action="Create" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <!--Por cada campo del formulario me pinta un form grop con 3 campos
@@ -30,9 +32,10 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="ImageUrl" class="control-label"></label>
-                <input asp-for="ImageUrl" class="form-control" />
-                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                <!--Cambio ImageUrl por ImageFile, y adicionamos type="file para habilitar boton examinar"-->
+                <label asp-for="ImageFile" class="control-label"></label>
+                <input asp-for="ImageFile" class="form-control" type="file"/>
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
             </div>
 
             <div class="form-group">

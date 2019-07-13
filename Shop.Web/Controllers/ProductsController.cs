@@ -1,12 +1,15 @@
 ﻿
 namespace Shop.Web.Controllers
 {
+    using System;
+    using System.IO;
     using System.Threading.Tasks;
     using Data;
     using Data.Entities;
     using Helpers;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
+    using Shop.Web.Models;
 
     public class ProductsController : Controller
     {
@@ -69,7 +72,10 @@ namespace Shop.Web.Controllers
         //Cuando le digo SAVE se ejecuta el botón Submit del formulario, el cual ejectula la acción POST
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Product product)
+        /*15 - cambiamos lo que devuelve el create, ya que es un productviewmodel*/
+        //public async Task<IActionResult> Create(Product product)
+        public async Task<IActionResult> Create(ProductViewModel view)
+
         {
             if (ModelState.IsValid)
             {
@@ -79,6 +85,37 @@ namespace Shop.Web.Controllers
 
                 /*Después de iyectar "userHelper" adicionamos la captura del usruario que ha creado el producto en "product.User"
                  Ir a Edit también y hacer el mismo cambio para que el usuaro no quede nulo.*/
+
+                /*15 - vamos a ver si el usuario seleccionó foto, pues no es obligatorio. En path estara la ruta donde
+                 * vanos a guardar la foto. Cuando subamos la foto al servidor quedará al www.root, dentro en images vamos 
+                 * crear una subcarpeta llamada produsts para introducir todas las imagenes de products.
+                 */
+                var path = string.Empty;
+
+                if (view.ImageFile != null && view.ImageFile.Length > 0)
+                {
+                    /*15-Toma la imagen y la sube a "wwwroot\\images\\Products", y lo concatena con el nombre del archivo
+                     FileName. En path queda la ruta donde se guardará enel servidor, queda subirla, esto creando un stream
+                     con el path y que nos cree un archivo (FileMode.Create), ya el copytoasync toma el contenido del
+                     archivo y me lo graba en el stream (copia carpeta local al servidor)*/
+                    path = Path.Combine(
+                        Directory.GetCurrentDirectory(), 
+                        "wwwroot\\images\\Products",
+                        view.ImageFile.FileName);
+
+                    using (var stream = new FileStream(path, FileMode.Create))
+                    {
+                        await view.ImageFile.CopyToAsync(stream);
+                    }
+
+                    /*15 - aquí la ruta que vamos a guardar en l abase de datos. Vamos a interpolar (~ ruta relativa
+                     * segun el ambiente donde esté trabajando) y lo concatenamos con el nombre del archivo. Ahora tenemos
+                     * un problema, que a la base de datos se envía es entidades PRODUCTS (return View(product)130) y yo
+                     * tengo es productviewmodel. Toca transformarlo, creamos var product  y método ToProduct*/
+                    path = $"~/images/Products/{view.ImageFile.FileName}";
+                }
+
+                var product = this.ToProduct(view, path);
                 //TODO: To change for the logged user
                 product.User = await this.userHelper.GetUserByEmailAsync("jedgara@gmail.com");
                 //cambio aquí
@@ -91,7 +128,30 @@ namespace Shop.Web.Controllers
              lo que lleva. Cuando se envia el post con el product se está enviando un producto nullo, el usuario
              llena todos o parcialmente los campos de product, cuando vuelve al POST regresa con los campos que
              el usuario haya ingresado (ya no es null).*/
-            return View(product);
+            /*15- cambiaos ya que no es product sino vista*/
+            //return View(product);
+            return View(view);
+        }
+
+        /* 15 - ToProduct-> le paso un ProductViewModel y nos devuelve un objeto de la clase Product, e igualamos
+         atributo a atributo para hacer la transformación del obejto. Luego de la transf lo mandamos a DB
+         Ya aquí está listo para subir imagenes, pero para probar necesitamos verlas, y esolo ahcemos en INDEX
+         (vista Index de Products)*/
+        private Product ToProduct(ProductViewModel view, string path)
+            {
+            return new Product
+            {
+                Id = view.Id,
+                ImageUrl = path,
+                IsAvailabe = view.IsAvailabe,
+                LastPurchase = view.LastPurchase,
+                LastSale = view.LastSale,
+                Name = view.Name,
+                Price = view.Price,
+                Stock = view.Stock,
+                User = view.User
+            };
+
         }
 
         // GET: Products/Edit/5
