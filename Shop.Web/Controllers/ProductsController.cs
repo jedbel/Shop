@@ -157,6 +157,9 @@ namespace Shop.Web.Controllers
         // GET: Products/Edit/5
         //public IActionResult Edit(int? id)
         // Cambió aquí el metodo
+        /*16-210719- EDIT IMAGES. La diferencia aquí es que si le digo Edit, le estoy pasando un product. Ahora aquí
+         * tenemos que convertir el product a productviewmodel porque le tenemos que pasar a la vista un productviewmodel
+         (lo contrario tutorial 15). Es decir, para ello iniciamos creando la variable "view"*/
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -171,17 +174,45 @@ namespace Shop.Web.Controllers
             {
                 return NotFound();
             }
+
+            /*16- para convertir el product a productviewmodel. Cambiamos "return View(product)", le pasamos un view
+             * "ToProductViewModel" es el método para transformar un obejto en otro*/
+            var view = this.ToProductViewModel(product);
             //pinta el formulario con los datos con los datos previos para que sean modificados
-            return View(product);
+            return View(view);
+        }
+
+        /*16- Definimos el método aquí. Para convertir, pasamos cada atributo de unlado para otro (copiamos del método Toproduct,
+         * ya lo hicimos), eliminar el path y adicionar el ImageUrl. Le estamos mosrando la foto actual para que el usuario
+         decida si quiere cambiarla.Después vamos a la vista y cambiamos allí lo que recibe, ya recibe es un productViewModel
+         es decir cambiamos Shop.Web.Data.Entities.Product por Shop.Web.Models.ProductViewModels*/
+         
+        private ProductViewModel ToProductViewModel(Product product)
+        {
+            return new ProductViewModel
+            {
+                Id = product.Id,
+                IsAvailabe = product.IsAvailabe,
+                LastPurchase = product.LastPurchase,
+                LastSale = product.LastSale,
+                ImageUrl = product.ImageUrl,
+                Name = product.Name,
+                Price = product.Price,
+                Stock = product.Stock,
+                User = product.User
+            };
         }
 
         // POST: Products/Edit/5
         // realizamos los cambios que el usuario realiza en el edit
+        /*16_2 - Después de estar en el EdiTView, volvemos acá. Ya no vamos a recibir un objecto de la clase product
+          vamos a recibirlo del productviewmodel, cambiamos Edit(int id, Product product)*/
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Product product)
+        public async Task<IActionResult> Edit(int id, ProductViewModel view)
         {
-            if (id != product.Id)
+            //if (id != Product.Id) cambié
+            if (id != view.Id)
             {
                 return NotFound();
             }
@@ -190,6 +221,30 @@ namespace Shop.Web.Controllers
             {
                 try
                 {
+                    /*16 Hacer algo similar al create, preguntar si hubo foto, si el campo imageFile viene con un valor es debido a que
+                     el usuario selccionó una foto que quiere subir. Aquí adiciono lo mismo del create*/
+                     /*16 ya no inicializmaos path en empty, ahora lo inicializamos con el IMAGEurl (imagen original), para esto le hicimos
+                      el HIDDEN*/
+                    var path = view.ImageUrl;
+
+                    if (view.ImageFile != null && view.ImageFile.Length > 0)
+                    {
+                        path = Path.Combine(
+                            Directory.GetCurrentDirectory(),
+                            "wwwroot\\images\\Products",
+                            view.ImageFile.FileName);
+
+                        using (var stream = new FileStream(path, FileMode.Create))
+                        {
+                            await view.ImageFile.CopyToAsync(stream);
+                        }
+
+                        path = $"~/images/Products/{view.ImageFile.FileName}";
+                    }
+
+                    var product = this.ToProduct(view, path);
+                    /*Hasta Aquí copié del create*/
+
                     //TODO: To change for the logged user
                     product.User = await this.userHelper.GetUserByEmailAsync("jedgara@gmail.com");
                     //Cambió acá
@@ -201,7 +256,8 @@ namespace Shop.Web.Controllers
                 {
                     //Cambió acá
                     //if (!this.repository.ProductExists(product.Id))
-                    if (!await this.productRepository.ExistAsync(product.Id))
+                    /*16 ya no es ExistAsync(product.Id), sino View id*/
+                    if (!await this.productRepository.ExistAsync(view.Id))
                         {
                         return NotFound();
                     }
@@ -212,7 +268,8 @@ namespace Shop.Web.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(product);
+            //return View(product);
+            return View(view);
         }
 
         // GET: Products/Delete/5

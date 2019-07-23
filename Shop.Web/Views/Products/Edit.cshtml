@@ -1,4 +1,4 @@
-﻿@model Shop.Web.Data.Entities.Product
+﻿@model Shop.Web.Models.ProductViewModel 
 
 @{
     ViewData["Title"] = "Edit";
@@ -11,13 +11,19 @@
 <div class="row">
     <div class="col-md-4">
         <!--Importante, se oculta el Id, cuando se busca el producto se envía el producto completo, incluido
-            el Id, pero el ususrio no tiene porque saber de él. Si no le hago el Hidden, como yo no lo pido en
-            el formlario, cuando haga el POST me llega NULL (el GET lo manda y en el POST se pierde), para que
-            no se pierda entre el cambio del GET y el POST, hay que ponerlo HIDDEN. Así mismo con los campos
-            que no quiero que el usuario me modifique /sepa/cambie ej fechas (eliminarlas de abajo y ponerlas Hidden)-->
-        <form asp-action="Edit">
+        el Id, pero el ususrio no tiene porque saber de él. Si no le hago el Hidden, como yo no lo pido en
+        el formlario, cuando haga el POST me llega NULL (el GET lo manda y en el POST se pierde), para que
+        no se pierda entre el cambio del GET y el POST, hay que ponerlo HIDDEN. Así mismo con los campos
+        que no quiero que el usuario me modifique /sepa/cambie ej fechas (eliminarlas de abajo y ponerlas Hidden)-->
+        <!--16 Adicionar el enctype="multipart/form-data" ya que si no lo pongo no selecciona la imagen. Tenemos que
+            adiconar en un hidden la imageUrl ya que no podemos perder ese valor en el POST, lo debemos guardar por si
+            el usuario no cambia la foto entonces no se nos pierda. COnclusión, Hidden para los campos que son importantes
+            que no se pierdan. Todo campo que no se pida acá se pierde, y no dejé de pedir el Imageurl, pido es el ImageFile
+            De aquí vamos al controlador-->
+        <form asp-action="Edit" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="ImageUrl" />
 
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
@@ -32,9 +38,10 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="ImageUrl" class="control-label"></label>
-                <input asp-for="ImageUrl" class="form-control" />
-                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                <!--16 - Adicionamos type="file"-->
+                <label asp-for="ImageFile" class="control-label"></label>
+                <input asp-for="ImageFile" class="form-control" type="file" />
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
             </div>
 
             <div class="form-group">
@@ -63,12 +70,24 @@
 
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
-                <a asp-action="Index"class="btn btn-success">Back to List</a>
+                <a asp-action="Index" class="btn btn-success">Back to List</a>
             </div>
         </form>
     </div>
+    <!--16 Boostrap maneja 12 columnas virtuales, "class="col-md-4" significa que los labels y los entries ocupan
+        4 columnas virtuales, yo puedo crear hasta 12 colunmas virtuales. Adiciono este nuevo "div md-4" para poner 
+        la foto, es decir, en las primeras 4 colunmas coloco la informaciòn del articulo, y en las otras 4 columnas 
+        voy a colocar la imagen del articulo, siempre y cuando el articulo haya enido una imagen previa. Voy al index y
+        m ecopio el pedazo de còdigo. Ya no es item.imageurl sino model.imageurl porque es unosolo (si el articulo
+        tiene imagen,pinte la imagen). Como es una sola imagen, puedo pintarla màs grande (màs pixeles), mult X3 --->
+    <div class="col-md-4">
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <img src="@Url.Content(Model.ImageUrl)" alt="Image" style="width:300px;height:450px;max-width: 100%; height: auto;" />
+        }
+    </div>
 </div>
 
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
+    @section Scripts {
+        @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    }
