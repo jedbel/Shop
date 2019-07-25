@@ -36,6 +36,32 @@ namespace Shop.Web.Data.Entities
         inyección en SeedDb.cs*/
         public User User { get; set; }
 
+        /*17-230719, Propiedad de lectura, es decir, propiedad GET (borramos el set). Las propiedades de lectura
+         no modifican la base de datos, no se necesita realizar migraciòn.Expandimos el GET con un poco de lògica.
+         SI IMageUrl está vacia, al IMAGEFullpath le retornamos un null (no hay imagen), si por el contrario si
+         tiene, le vamos a retornar la interpolación ($ = sintaxis interpolación), concatenamos la ruta de la imagen
+         con la imagen, como inicia con virgulilla le hago un substring(1), inicia a partir de la segunda posic, la
+         cero la elimina*/
+        public string ImageFullPath
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(this.ImageUrl))
+                {
+                    return null;
+                }
+                return $"https://shopjedbelgarcia.azurewebsites.net{this.ImageUrl.Substring(1)}";
+                /*17 return $".....azurewebsites.net" + this.ImageUrl.Substring(1)es lo mismo de arriba, pero esto es muy feo
+                 y l ainterpolación es mas poderos, puedes editar, añadir separadores de mil, etc. Ahora vamos
+                 ahacer una mejora, ordenar los productos por orden alfabético, ya que al generalizarlo <T> se me dañó
+                 el orden. Para esto, debemos crear una propiedad personalizada e implementar métodos personalizados, los 
+                 cuales los debo crear en cada repositorio específico; esto lo hago en en Data>IproductRepository (adic metods)
+                 Y los métodos que implemente allí a quien le van a servir, solamente a Products. Adicionamos método
+                 GetAllWithUsers*/
+            }
+
+
+        }
     }
 
 }

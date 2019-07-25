@@ -31,7 +31,10 @@ namespace Shop.Web.Controllers.API
         [HttpGet]
         public IActionResult GetProducts()
         {
-            return Ok(this.productRepository.GetAll());
+            /*17 cambio el GetAll por el GetAllWithUsers, y como voy a mostrar la lista en el teléfono, elteléfono puede
+             ordenar, pero se recomienda que el trabajo pesado me lo haga el backed, dejando la app movil lo mas liviano
+             posible, así que ordeno por nombre (error y no se ordena, esperar sino borrar comentario.)*/
+            return Ok(this.productRepository.GetAllWithUsers());
         }
     }
 }

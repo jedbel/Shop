@@ -3,6 +3,7 @@ namespace Shop.Web.Controllers
 {
     using System;
     using System.IO;
+    using System.Linq;
     using System.Threading.Tasks;
     using Data;
     using Data.Entities;
@@ -37,7 +38,11 @@ namespace Shop.Web.Controllers
              y los modelos son los objetos que estamos trasportando entre V y C) */
            // Cambió el método 
            //return View(this.repository.GetProducts());
-            return View(this.productRepository.GetAll());
+           /*17 Aquí voy a ordenar los usuarios, con el gellall traigo todo (no necesario traer solo los usuarios)
+            y como es un Iqueryable te hago el OrderBy ordenando productos por Name (ventajas del Iqueryable ). 
+            EN el controlador MVC (este), simplemente ordenar, mientras que en el controlador del API
+            (API>ProductsCOntroller) si me hace falta que me incluya los articulos.*/
+            return View(this.productRepository.GetAll().OrderBy(p => p.Name));
         }
 
         // GET: Products/Details/5
